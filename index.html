@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Berra'nın İÜHF Not Hesaplama Sistemi </title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    max-width: 900px;
+    margin: 30px auto;
+    padding: 0 15px;
+    background: #f9f9f9;
+  }
+  h1 {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  #dersler, #secmeliContainer {
+    margin-bottom: 25px;
+  }
+  .row, .secmeli-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .row input[type="checkbox"] {
+    flex: 0 0 20px;
+  }
+  .row span.dersAdi {
+    flex: 3;
+  }
+  .row select, .secmeli-row select, .secmeli-row input[type="number"] {
+    padding: 5px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    flex: 1;
+  }
+  .row span.kredi {
+    flex: 0 0 40px;
+    text-align: center;
+    background: #eee;
+    border-radius: 5px;
+    padding: 5px;
+    font-weight: bold;
+  }
+  .secmeli-row input[type="text"] {
+    flex: 3;
+    padding: 5px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+  }
+  button {
+    cursor: pointer;
+    padding: 8px 15px;
+    border: none;
+    border-radius: 6px;
+    background-color: #007bff;
+    color: white;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+  }
+  button:hover {
+    background-color: #0056b3;
+  }
+  button.remove-btn {
+    background-color: #dc3545;
+    flex: 0 0 30px;
+  }
+  button.remove-btn:hover {
+    background-color: #a71d2a;
+  }
+  #result {
+    margin-top: 20px;
+    font-size: 1.3em;
+    font-weight: bold;
+    text-align: center;
+  }
+  #secmeliEkleBtn {
+    margin-bottom: 15px;
+  }
+</style>
+</head>
+<body>
+
+<h1>Berra'nın İÜHF Not Hesaplama</h1>
+
+<div id="dersler"></div>
+
+<hr />
+
+<h3>Seçmeli Dersler</h3>
+<button id="secmeliEkleBtn">+ Seçmeli Ders Ekle</button>
+<div id="secmeliContainer"></div>
+
+<hr />
+
+<div style="text-align:center;">
+  <button onclick="hesaplaANO()">ANO Hesapla</button>
+</div>
+
+<div id="result"></div>
+
+<script>
+  // Sabit ders listesi
+  const dersListesi = [
+    "YABANCI DİL",
+    "ROMA HUKUKU",
+    "GENEL KAMU HUKUKU",
+    "BİLİŞİM VE TEKNOLOJİ HUKUKU",
+    "MEDENİ HUKUK GİRİŞ KİŞİLER VE AİLE HUKUKU",
+    "ANAYASA HUKUKU",
+    "TÜRK DİLİ",
+    "HUKUK BAŞLANGICI",
+    "ATATÜRK İLKELERİ VE İNKILAP TARİHİ",
+    "BORÇLAR HUKUKU: GENEL HÜKÜMLER",
+    "CEZA HUKUKU: GENEL HÜKÜMLER",
+    "TÜRK HUKUK TARİHİ",
+    "MİLLETLERARASI HUKUK",
+    "İDARE HUKUKU ",
+    "HUKUK FELSEFESİ VE SOSYOLOJİSİ",
+    "İNSAN HAKLARI HUKUKU",
+    "EŞYA HUKUKU",
+    "KAMU MALİYESİ VE VERGİ HUKUKU",
+    "MEDENİ USUL HUKUKU",
+    "TİCARET HUKUKU",
+    "ÖZEL BORÇ İLİŞKİLERİ",
+    "CEZA HUKUKU: ÖZEL HÜKÜMLER",
+    "İŞ VE SOSYAL GÜVENLİK HUKUKU",
+    "DENİZ TİCARET VE SİGORTA HUKUKU",
+    "İDARİ YARGILAMA HUKUKU",
+    "İCRA VE İFLAS HUKUKU",
+    "MİLLETLERARASI ÖZEL HUKUK",
+    "CEZA MAHKEMESİ HUKUKU",
+    "MİRAS HUKUKU",
+  ];
+
+  // Her dersin kredi değeri
+  const dersKredileri = {
+    "YABANCI DİL": 2,
+    "ROMA HUKUKU": 2,
+    "GENEL KAMU HUKUKU": 2,
+    "BİLİŞİM VE TEKNOLOJİ HUKUKU": 1,
+    "MEDENİ HUKUK GİRİŞ KİŞİLER VE AİLE HUKUKU": 4,
+    "ANAYASA HUKUKU": 4,
+    "TÜRK DİLİ": 2,
+    "HUKUK BAŞLANGICI": 1,
+    "ATATÜRK İLKELERİ VE İNKILAP TARİHİ": 2,
+    "BORÇLAR HUKUKU: GENEL HÜKÜMLER": 4,
+    "CEZA HUKUKU: GENEL HÜKÜMLER": 4,
+    "TÜRK HUKUK TARİHİ": 2,
+    "MİLLETLERARASI HUKUK": 3,
+    "İDARE HUKUKU ": 4,
+    "HUKUK FELSEFESİ VE SOSYOLOJİSİ": 2,
+    "İNSAN HAKLARI HUKUKU": 2,
+    "EŞYA HUKUKU": 3,
+    "KAMU MALİYESİ VE VERGİ HUKUKU": 3,
+    "MEDENİ USUL HUKUKU": 4,
+    "TİCARET HUKUKU": 4,
+    "ÖZEL BORÇ İLİŞKİLERİ": 2,
+    "CEZA HUKUKU: ÖZEL HÜKÜMLER": 2,
+    "İŞ VE SOSYAL GÜVENLİK HUKUKU": 3,
+    "DENİZ TİCARET VE SİGORTA HUKUKU": 3,
+    "İDARİ YARGILAMA HUKUKU": 2,
+    "İCRA VE İFLAS HUKUKU": 2,
+    "MİLLETLERARASI ÖZEL HUKUK": 3,
+    "CEZA MAHKEMESİ HUKUKU": 3,
+    "MİRAS HUKUKU": 2,
+  };
+
+  // Harf notları ve katsayıları
+  const harfNotlari = ["AA","BA","BB","CB","CC","DC","DD","FD","FF"];
+  const notKatsayi = {
+    "AA": 4.0,
+    "BA": 3.5,
+    "BB": 3.0,
+    "CB": 2.5,
+    "CC": 2.0,
+    "DC": 1.5,
+    "DD": 1.0,
+    "FD": 0.5,
+    "FF": 0.0
+  };
+
+  const derslerDiv = document.getElementById("dersler");
+  const secmeliContainer = document.getElementById("secmeliContainer");
+  const secmeliEkleBtn = document.getElementById("secmeliEkleBtn");
+
+  // Normal dersleri oluştur
+  dersListesi.forEach(ders => {
+    const row = document.createElement("div");
+    row.className = "row";
+
+    // Hesaplamaya dahil etmek için checkbox
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = false;
+
+    // Ders adı
+    const dersAd = document.createElement("span");
+    dersAd.className = "dersAdi";
+    dersAd.textContent = ders;
+
+    // Harf notu seçimi
+    const notSecimi = document.createElement("select");
+    harfNotlari.forEach(not => {
+      const opt = document.createElement("option");
+      opt.value = not;
+      opt.text = not;
+      notSecimi.appendChild(opt);
+    });
+
+    // Kredi göstergesi (değiştirilemez)
+    const krediSpan = document.createElement("span");
+    krediSpan.className = "kredi";
+    krediSpan.textContent = dersKredileri[ders] || "-";
+
+    // Elemanları sırayla ekle
+    row.appendChild(checkbox);
+    row.appendChild(dersAd);
+    row.appendChild(notSecimi);
+    row.appendChild(krediSpan);
+
+    derslerDiv.appendChild(row);
+  });
+
+  // Seçmeli ders ekleme butonu
+  secmeliEkleBtn.addEventListener("click", () => {
+    const secmeliRow = document.createElement("div");
+    secmeliRow.className = "secmeli-row";
+
+    const dersInput = document.createElement("input");
+    dersInput.type = "text";
+    dersInput.placeholder = "Ders Adı";
+
+    const notSelect = document.createElement("select");
+    harfNotlari.forEach(not => {
+      const opt = document.createElement("option");
+      opt.value = not;
+      opt.text = not;
+      notSelect.appendChild(opt);
+    });
+
+    const krediInput = document.createElement("input");
+    krediInput.type = "number";
+    krediInput.min = 0;
+    krediInput.step = 0.5;
+    krediInput.placeholder = "Kredi";
+    krediInput.style.width = "60px";
+
+    const removeBtn = document.createElement("button");
+    removeBtn.textContent = "X";
+    removeBtn.className = "remove-btn";
+    removeBtn.title = "Seçmeli dersi kaldır";
+    removeBtn.onclick = () => {
+      secmeliContainer.removeChild(secmeliRow);
+    };
+
+    secmeliRow.appendChild(dersInput);
+    secmeliRow.appendChild(notSelect);
+    secmeliRow.appendChild(krediInput);
+    secmeliRow.appendChild(removeBtn);
+
+    secmeliContainer.appendChild(secmeliRow);
+  });
+
+  // ANO Hesaplama fonksiyonu
+  function hesaplaANO() {
+    let toplamKredi = 0;
+    let toplamNotKatsayi = 0;
+
+    // Normal dersler
+    const normalRows = document.querySelectorAll("#dersler .row");
+    normalRows.forEach(row => {
+      const isChecked = row.querySelector("input[type='checkbox']").checked;
+      if (!isChecked) return;
+
+      const not = row.querySelector("select").value;
+      const dersAd = row.querySelector("span.dersAdi").textContent;
+      const kredi = dersKredileri[dersAd] || 0;
+
+      if (kredi > 0) {
+        toplamKredi += kredi * 2;  // yıllık sistem için kredi 2 ile çarpılıyor
+        toplamNotKatsayi += notKatsayi[not] * kredi * 2;
+      }
+    });
+
+    // Seçmeli dersler
+    const secmeliRows = document.querySelectorAll("#secmeliContainer .secmeli-row");
+    secmeliRows.forEach(row => {
+      const not = row.querySelector("select").value;
+      const kredi = parseFloat(row.querySelector("input[type='number']").value) || 0;
+
+      if (kredi > 0) {
+        toplamKredi += kredi;  // seçmeli ders kredisi 2 ile çarpılmaz
+        toplamNotKatsayi += notKatsayi[not] * kredi;
+      }
+    });
+
+    if (toplamKredi === 0) {
+      alert("Lütfen en az bir ders seçili ve kredi girili olsun.");
+      return;
+    }
+
+    const ano = (toplamNotKatsayi / toplamKredi).toFixed(2);
+    document.getElementById("result").textContent = "ANO: " + ano;
+  }
+</script>
+
+</body>
+</html>
+
